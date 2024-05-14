@@ -52,7 +52,7 @@ We must investigate the contents of the 16 parts, thus we have to find a way to 
 
 # Mounting the Image
 
-We have to deal with parts of images under the EWF image format.
+We have to deal with parts of the image under the EWF image format.
 
 I used the tool `ewfexport` to export the 16 parts to a single raw file.
 ```
@@ -295,12 +295,12 @@ backdoor!
 Let's gather the clean and the backdoored versions of `pam_unix.so` and compare their contents with Ghidra.
 
 The first remarkable detail is that the backdoored version contains
-extra data in the .rodata section. To find where it is used, a good
+extra data in the `.rodata` section. To find where it is used, a good
 reflex is to find all references to it (in Ghidra, right-click ->
 References -> Show references to address).
 
 It leads us to the following piece of code:
-```
+```c
   local_328 = 0x6f5f4577;
   uStack_324 = 0x9688907c;
   uStack_320 = 0x4705b114;
@@ -337,18 +337,18 @@ allows the attacker to log as any user using the same static password.
 
 The password (at `local 2c8`) is actually simply xored with the key at
 `local_328`. But there is a little trap. The password length seems to
-be 0x3e while there are 0x3f bytes in .rodata. When looking carefully,
+be 0x3e while there are 0x3f bytes in `.rodata`. When looking carefully,
 one character in the middle is actually "skipped" when loading data
 into `local_2c8`.
 
 ![ghidra](assets/croissants/img/ghidra.png)
 
 The last chunk of data is wrote at `local_2a8[15]` instead of
-`local_298` which overwrite the last byte of the previous chunk. I
+`local_298` which overwrites the last byte of the previous chunk. I
 just removed the corresponding byte from the data in my solve script.
 
 ```python
-data = b'\x77\x45\x5f\x6f\x7c\x90\x88\x96\x14\xb1\x05\x47\x33\x8e\x4e\x1b\x0a\x07\xf8\x8a\x8b\x82\x32\x10\x55\x2a\xbb\x5f\x71\xc6\x3f\x1c\x43\x75\x6b\x2c\x28\xd6\xf3\xf2\x27\xdc\x31\x76\x5d\xd1\x0f\x77\x39\x7f\x91\xbf\xd4\xb2\x54\x76\x27\x4f\xe4\x2c\x1e\x88\x60\x6c\x44\x36\x1f\x01\x08\xcf\xcc\xf3\x4b\xd2\x77\x77\x5a\xfd\x3d\x7a\x44\x30\x8b\xd5\xea\xd7\x6d\x72\x66\x5f\xc9\x2d\x34\xbb
+data = b'\x77\x45\x5f\x6f\x7c\x90\x88\x96\x14\xb1\x05\x47\x33\x8e\x4e\x1b\x0a\x07\xf8\x8a\x8b\x82\x32\x10\x55\x2a\xbb\x5f\x71\xc6\x3f\x1c\x43\x75\x6b\x2c\x28\xd6\xf3\xf2\x27\xdc\x31\x76\x5d\xd1\x0f\x77\x39\x7f\x91\xbf\xd4\xb2\x54\x76\x27\x4f\xe4\x2c\x1e\x88\x60\x6c\x44\x36\x1f\x01\x08\xcf\xcc\xf3\x4b\xd2\x77\x77\x5a\xfd\x3d\x7a\x44\x30\x8b\xd5\xea\xd7\x6d\x72\x66\x5f\xc9\x2d\x34\xbb'
 
 flag = b''
 
